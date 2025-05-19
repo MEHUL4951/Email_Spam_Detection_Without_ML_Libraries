@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spam Detector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .spam {
+            background-color: #ffdddd;
+            border-left: 6px solid #f44336;
+        }
+        .ham {
+            background-color: #ddffdd;
+            border-left: 6px solid #4CAF50;
+        }
+        .prediction {
+            font-weight: bold;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Email Spam Detector</h1>
+    <div class="container">
+        <p>Enter an email below to check if it's spam or ham (not spam):</p>
+        <textarea id="emailText" placeholder="Paste your email content here..."></textarea>
+        <button onclick="classifyEmail()">Check for Spam</button>
+
+        <div id="result" class="result">
+            <p>Prediction: <span id="prediction" class="prediction"></span></p>
+            <p>Spam Score: <strong><span id="spamScore"></span>%</strong></p>
+            <p>Ham Score: <strong><span id="hamScore"></span>%</strong></p>
+            <p>Original email:</p>
+            <div id="originalEmail" style="white-space: pre-wrap; background: #eee; padding: 10px; border-radius: 4px;"></div>
+        </div>
+    </div>
+
+    <script>
+        function classifyEmail() {
+            const emailText = document.getElementById('emailText').value;
+            const resultDiv = document.getElementById('result');
+            const predictionSpan = document.getElementById('prediction');
+            const spamScoreSpan = document.getElementById('spamScore');
+            const hamScoreSpan = document.getElementById('hamScore');
+            const originalEmailDiv = document.getElementById('originalEmail');
+
+            if (!emailText) {
+                alert('Please enter some email text to analyze');
+                return;
+            }
+
+            fetch('/classify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `email_text=${encodeURIComponent(emailText)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                predictionSpan.textContent = data.prediction;
+                spamScoreSpan.textContent = data.spam_prob;
+                hamScoreSpan.textContent = data.ham_prob;
+                originalEmailDiv.textContent = data.email_text;
+
+                resultDiv.className = 'result ' + data.prediction.toLowerCase();
+                resultDiv.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while processing your request');
+            });
+        }
+    </script>
+</body>
+</html>
